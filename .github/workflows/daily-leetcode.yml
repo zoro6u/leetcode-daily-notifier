@@ -2,10 +2,15 @@ name: Daily LeetCode Notifier
 
 on:
   schedule:
-    # 06:00 UTC = 08:00 Kigali time (CAT, UTC+2)
-    # LeetCode's daily question resets at 00:00 UTC
-    - cron: "0 6 * * *"
-  workflow_dispatch: # lets you run it manually from the Actions tab
+    - cron: "0 6 * * *"   # 08:00 Kigali — send today's question
+    - cron: "0 19 * * *"  # 21:00 Kigali — remind if not solved
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Which message to send"
+        type: choice
+        options: [morning, evening]
+        default: morning
 
 jobs:
   notify:
@@ -20,8 +25,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Send daily question
+      - name: Send notification
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python notify.py
+          LC_USERNAME: ${{ secrets.LC_USERNAME }}
+          MODE: ${{ github.event.inputs.mode || (github.event.schedule == '0 19 * * *' && 'evening' || 'morning') }}
+        run: python notify.py "$MODE"

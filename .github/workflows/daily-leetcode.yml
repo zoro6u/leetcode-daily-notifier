@@ -1,0 +1,27 @@
+name: Daily LeetCode Notifier
+
+on:
+  schedule:
+    # 06:00 UTC = 08:00 Kigali time (CAT, UTC+2)
+    # LeetCode's daily question resets at 00:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch: # lets you run it manually from the Actions tab
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send daily question
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python notify.py
